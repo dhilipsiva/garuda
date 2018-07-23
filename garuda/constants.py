@@ -7,7 +7,7 @@ def default(var_name, value):
     return value
 
 
-GARUDA_DIR = default('GARUDA_DIR', 'garuda_data')
+GARUDA_DIR = default('GARUDA_DIR', 'garuda_dir')
 GARUDA_SUFFIX = default('GARUDA_SUFFIX', 'Garuda')
 
 # Fields to ifnore while dictifying
@@ -43,11 +43,26 @@ GARUDA_AST_MAP = default('GARUDA_AST_MAP', dict(
     Attribute=lambda kw: '%s.%s' % (kw.value.value.id, kw.value.attr),
 ))
 
-GARUDA_PROTO_HEADER = ''
-GARUDA_PROTO_FOOTER = ''
+GARUDA_PROTO_HEADER = default('GARUDA_PROTO_HEADER', '''
+syntax = "proto3";
 
-GARUDA_DBAPI_CONTENT = default('GARUDA_DBAPI_CONTENT', '''
-from garuda.%(app_name)s.models import %(model_name)s  # NOQA
+option java_multiple_files = true;
+option java_package = "com.dhilipsiva.garuda";
+option java_outer_classname = "GarudaProto";
+option objc_class_prefix = "DSG";
+
+package garuda;
+
+message Void {}
+
+message ID {
+    int64 id = 1;
+}
+''')
+GARUDA_PROTO_FOOTER = default('GARUDA_PROTO_FOOTER', '')
+
+GARUDA_CRUD_TEMPLATE = default('GARUDA_CRUD_TEMPLATE', '''
+from %(app)s.models import %(model_name)s  # NOQA
 GARUDA_IGNORE_FIELDS = %(ignore_fields)s  # NOQA
 
 
@@ -86,9 +101,9 @@ def delete_%(model_name_lower)s(id):
     return %(model_name)s.objects.get(id=id).delete()
 ''')
 
-GARUDA_CRUD_CONTENT = default('GARUDA_CRUD_CONTENT', '''
-from garuda.proto.garuda_pb2 import %(model_name)s, Void  # NOQA
-from garuda.%(app_name)s.auto_crud import (  # NOQA
+GARUDA_RPC_METHODS = default('GARUDA_RPC_METHODS', '''
+from %(GARUDA_DIR)s.garuda_pb2 import %(model_name)s, Void  # NOQA
+from %(app)s.auto_crud import (  # NOQA
     read_%(model_name_lower)s,
     delete_%(model_name_lower)s,
     create_%(model_name_lower)s,
@@ -117,6 +132,7 @@ def %(model_name_lower)s_to_dict(obj):
 
 
 class %(rpc_name)s:
+
     def Read%(model_name_plural)sFilter(self, void, context):
         objs = read_%(model_name_lower_plural)s_filter()
         return [%(model_name)s(
@@ -146,5 +162,5 @@ GARUDA_RPC_CONTENT = default('GARUDA_RPC_CONTENT', '''
   rpc Update%(model_name)s(%(model_name)s) returns (Void);
   rpc Read%(model_name)s(ID) returns (%(model_name)s);
   rpc Create%(model_name)s(%(model_name)s) returns (%(model_name)s);
-  rpc Read%(model_name_plural)sFilter(Tracker) returns (stream %(model_name)s);
+  rpc Read%(model_name_plural)sFilter(Void) returns (stream %(model_name)s);
 ''')

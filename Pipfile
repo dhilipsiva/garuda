@@ -8,6 +8,8 @@ django = "*"
 garuda = {editable = true, path = "."}
 orm-choices = "*"
 inflect = "*"
+grpcio = "*"
+grpcio-tools = "*"
 
 [dev-packages]
 neovim = "*"

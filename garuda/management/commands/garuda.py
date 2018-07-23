@@ -12,7 +12,7 @@ from django.conf import settings
 from django.core.management.base import BaseCommand
 
 from garuda.constants import GARUDA_SUFFIX, GARUDA_FIELDS, GARUDA_AST_MAP, \
-    GARUDA_IGNORE_FIELDS, GARUDA_CRUD_CONTENT, GARUDA_DBAPI_CONTENT, \
+    GARUDA_IGNORE_FIELDS, GARUDA_RPC_METHODS, GARUDA_CRUD_TEMPLATE, \
     GARUDA_RPC_CONTENT, GARUDA_REMOVE_FIELDS, GARUDA_DIR, \
     GARUDA_PROTO_HEADER, GARUDA_PROTO_FOOTER
 
@@ -125,9 +125,8 @@ def generate_model(model_name, model):
     field_names = list(fields.keys()) + list(many_fields.keys())
 
     # remove id which is already in declaration
-    # for field in ['id']:
-    #     # and we do not need these fields as well
-    #     field_names.remove(field)
+    if 'id' in field_names:
+        field_names.remove('id')
     for idx, field in enumerate(sorted(field_names)):
         field_type = get_rpc_type(field, fields, choices, many_fields)
         fields_declaration += f'\n    {field_type} {field} = {idx + 2};'
@@ -190,16 +189,16 @@ def write_to_file(app, kind, content, extention='py'):
         f.write(content.strip())
 
 
-def codify_model(app_name, model_name, model_defnition):
+def codify_model(app, model_name, model_defnition):
     fields = sorted(model_defnition['fields'].keys())
     foriegn_keys = sorted(model_defnition['foriegn_keys'])
     for field in GARUDA_REMOVE_FIELDS:
         fields.remove(field)
     ctx = dict(
-        app_name=app_name, fields=fields, foriegn_keys=foriegn_keys,
-        ignore_fields=GARUDA_IGNORE_FIELDS)
+        app=app, fields=fields, foriegn_keys=foriegn_keys,
+        ignore_fields=GARUDA_IGNORE_FIELDS, GARUDA_DIR=GARUDA_DIR)
     ctx.update(model_defnition['inflections'])
-    return GARUDA_CRUD_CONTENT % ctx, GARUDA_DBAPI_CONTENT % ctx
+    return GARUDA_CRUD_TEMPLATE % ctx, GARUDA_RPC_METHODS % ctx
 
 
 def codify_app(app, models):
@@ -268,7 +267,7 @@ class Command(BaseCommand):
         generate_auto_garuda(app_models)
         CHOICES_PROTO = generate_choices_proto()
         MODELS_PROTO = generate_model_proto(app_models)
-        GARUDA_RPC = "service garuda{%s}" % generate_garuda_rpc(app_models)
+        GARUDA_RPC = "service Garuda{%s}" % generate_garuda_rpc(app_models)
         with open(f'{GARUDA_DIR}/garuda.proto', 'w') as f:
             print(f'writing to {f.name} ...')
             f.write(f'''

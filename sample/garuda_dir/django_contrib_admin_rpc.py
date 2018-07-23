@@ -2,8 +2,8 @@
 # THIS FILE IS AUTO-GENERATED
 # MANUAL CHANGES WILL BE DISCARDED
 # PLEASE READ GARUDA DOCS
-from garuda.proto.garuda_pb2 import LogEntry, Void  # NOQA
-from garuda.django.contrib.admin.auto_crud import (  # NOQA
+from garuda_dir.garuda_pb2 import LogEntry, Void  # NOQA
+from django.contrib.admin.auto_crud import (  # NOQA
     read_logentry,
     delete_logentry,
     create_logentry,
@@ -32,6 +32,7 @@ def logentry_to_dict(obj):
 
 
 class LogEntryGaruda:
+
     def ReadLogEntrysFilter(self, void, context):
         objs = read_logentries_filter()
         return [LogEntry(

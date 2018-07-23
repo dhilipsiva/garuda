@@ -2,7 +2,7 @@
 # THIS FILE IS AUTO-GENERATED
 # MANUAL CHANGES WILL BE DISCARDED
 # PLEASE READ GARUDA DOCS
-from garuda.django.contrib.admin.models import LogEntry  # NOQA
+from django.contrib.admin.models import LogEntry  # NOQA
 GARUDA_IGNORE_FIELDS = ['created_on', 'updated_on', 'id']  # NOQA
 
 

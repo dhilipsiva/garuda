@@ -2,8 +2,8 @@
 # THIS FILE IS AUTO-GENERATED
 # MANUAL CHANGES WILL BE DISCARDED
 # PLEASE READ GARUDA DOCS
-from garuda.proto.garuda_pb2 import Permission, Void  # NOQA
-from garuda.django.contrib.auth.auto_crud import (  # NOQA
+from garuda_dir.garuda_pb2 import Permission, Void  # NOQA
+from django.contrib.auth.auto_crud import (  # NOQA
     read_permission,
     delete_permission,
     create_permission,
@@ -32,6 +32,7 @@ def permission_to_dict(obj):
 
 
 class PermissionGaruda:
+
     def ReadPermissionsFilter(self, void, context):
         objs = read_permissions_filter()
         return [Permission(
@@ -55,8 +56,8 @@ class PermissionGaruda:
         delete_permission(id.id)
         return Void()
 
-from garuda.proto.garuda_pb2 import Group, Void  # NOQA
-from garuda.django.contrib.auth.auto_crud import (  # NOQA
+from garuda_dir.garuda_pb2 import Group, Void  # NOQA
+from django.contrib.auth.auto_crud import (  # NOQA
     read_group,
     delete_group,
     create_group,
@@ -85,6 +86,7 @@ def group_to_dict(obj):
 
 
 class GroupGaruda:
+
     def ReadGroupsFilter(self, void, context):
         objs = read_groups_filter()
         return [Group(
@@ -108,8 +110,8 @@ class GroupGaruda:
         delete_group(id.id)
         return Void()
 
-from garuda.proto.garuda_pb2 import User, Void  # NOQA
-from garuda.django.contrib.auth.auto_crud import (  # NOQA
+from garuda_dir.garuda_pb2 import User, Void  # NOQA
+from django.contrib.auth.auto_crud import (  # NOQA
     read_user,
     delete_user,
     create_user,
@@ -138,6 +140,7 @@ def user_to_dict(obj):
 
 
 class UserGaruda:
+
     def ReadUsersFilter(self, void, context):
         objs = read_users_filter()
         return [User(

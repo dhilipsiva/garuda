@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import setup
 
 __VERSION__ = '0.0.1'
 
@@ -41,5 +41,7 @@ Microservices are fun. But what would make them even more fun to work with,
         "django>=2.0",
         "inflect==0.3.1",
         "orm-choices==1.0.0",
+        "grpcio==1.13.0",
+        "grpcio-tools==1.13.0",
     ],
 )

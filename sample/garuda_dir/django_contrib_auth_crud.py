@@ -2,7 +2,7 @@
 # THIS FILE IS AUTO-GENERATED
 # MANUAL CHANGES WILL BE DISCARDED
 # PLEASE READ GARUDA DOCS
-from garuda.django.contrib.auth.models import Permission  # NOQA
+from django.contrib.auth.models import Permission  # NOQA
 GARUDA_IGNORE_FIELDS = ['created_on', 'updated_on', 'id']  # NOQA
 
 
@@ -40,7 +40,7 @@ def update_permission(id, *args, **kwargs):
 def delete_permission(id):
     return Permission.objects.get(id=id).delete()
 
-from garuda.django.contrib.auth.models import Group  # NOQA
+from django.contrib.auth.models import Group  # NOQA
 GARUDA_IGNORE_FIELDS = ['created_on', 'updated_on', 'id']  # NOQA
 
 
@@ -78,7 +78,7 @@ def update_group(id, *args, **kwargs):
 def delete_group(id):
     return Group.objects.get(id=id).delete()
 
-from garuda.django.contrib.auth.models import User  # NOQA
+from django.contrib.auth.models import User  # NOQA
 GARUDA_IGNORE_FIELDS = ['created_on', 'updated_on', 'id']  # NOQA
 
 

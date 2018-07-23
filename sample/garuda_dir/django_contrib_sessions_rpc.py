@@ -2,8 +2,8 @@
 # THIS FILE IS AUTO-GENERATED
 # MANUAL CHANGES WILL BE DISCARDED
 # PLEASE READ GARUDA DOCS
-from garuda.proto.garuda_pb2 import Session, Void  # NOQA
-from garuda.django.contrib.sessions.auto_crud import (  # NOQA
+from garuda_dir.garuda_pb2 import Session, Void  # NOQA
+from django.contrib.sessions.auto_crud import (  # NOQA
     read_session,
     delete_session,
     create_session,
@@ -32,6 +32,7 @@ def session_to_dict(obj):
 
 
 class SessionGaruda:
+
     def ReadSessionsFilter(self, void, context):
         objs = read_sessions_filter()
         return [Session(

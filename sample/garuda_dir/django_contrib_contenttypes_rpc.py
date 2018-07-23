@@ -2,8 +2,8 @@
 # THIS FILE IS AUTO-GENERATED
 # MANUAL CHANGES WILL BE DISCARDED
 # PLEASE READ GARUDA DOCS
-from garuda.proto.garuda_pb2 import ContentType, Void  # NOQA
-from garuda.django.contrib.contenttypes.auto_crud import (  # NOQA
+from garuda_dir.garuda_pb2 import ContentType, Void  # NOQA
+from django.contrib.contenttypes.auto_crud import (  # NOQA
     read_contenttype,
     delete_contenttype,
     create_contenttype,
@@ -32,6 +32,7 @@ def contenttype_to_dict(obj):
 
 
 class ContentTypeGaruda:
+
     def ReadContentTypesFilter(self, void, context):
         objs = read_contenttypes_filter()
         return [ContentType(

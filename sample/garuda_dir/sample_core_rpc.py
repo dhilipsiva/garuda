@@ -2,8 +2,8 @@
 # THIS FILE IS AUTO-GENERATED
 # MANUAL CHANGES WILL BE DISCARDED
 # PLEASE READ GARUDA DOCS
-from garuda.proto.garuda_pb2 import Article, Void  # NOQA
-from garuda.sample.core.auto_crud import (  # NOQA
+from garuda_dir.garuda_pb2 import Article, Void  # NOQA
+from sample.core.auto_crud import (  # NOQA
     read_article,
     delete_article,
     create_article,
@@ -32,6 +32,7 @@ def article_to_dict(obj):
 
 
 class ArticleGaruda:
+
     def ReadArticlesFilter(self, void, context):
         objs = read_articles_filter()
         return [Article(
