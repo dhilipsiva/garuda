@@ -175,6 +175,7 @@ def generate_choices_proto():
 def sluggify(app):
     return re.sub('[^0-9a-zA-Z]+', '_', app)
 
+
 def write_to_file(app, kind, content, extention='py'):
     app = sluggify(app)
     comment_prefix = '//'
