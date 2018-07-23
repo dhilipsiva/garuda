@@ -1,0 +1,124 @@
+enum ArticleStatus {
+    ArticleStatusUNKNOWN = 0;
+    UNPUBLISHED = 0;
+    PUBLISHED = 1;
+    REVIEW_REQUIRED = 2;
+    DELETED = 3;
+}
+
+
+message LogEntry {
+    string id = 1;
+    int32 action_flag = 2;
+    string action_time = 3;
+    string change_message = 4;
+    int64 content_type_id = 5;
+    int64 id = 6;
+    string object_id = 7;
+    string object_repr = 8;
+    int64 user_id = 9;
+}
+
+message Permission {
+    string id = 1;
+    string codename = 2;
+    int64 content_type_id = 3;
+    repeated string group = 4;
+    int64 id = 5;
+    string name = 6;
+    repeated string user = 7;
+}
+
+message Group {
+    string id = 1;
+    int64 id = 2;
+    string name = 3;
+    repeated string permissions = 4;
+    repeated string user = 5;
+}
+
+message User {
+    string id = 1;
+    string date_joined = 2;
+    string email = 3;
+    string first_name = 4;
+    repeated string groups = 5;
+    int64 id = 6;
+    bool is_active = 7;
+    bool is_staff = 8;
+    bool is_superuser = 9;
+    string last_login = 10;
+    string last_name = 11;
+    repeated string logentry = 12;
+    string password = 13;
+    repeated string user_permissions = 14;
+    string username = 15;
+}
+
+message ContentType {
+    string id = 1;
+    string app_label = 2;
+    int64 id = 3;
+    repeated string logentry = 4;
+    string model = 5;
+    repeated string permission = 6;
+}
+
+message Session {
+    string id = 1;
+    string expire_date = 2;
+    string session_data = 3;
+    string session_key = 4;
+}
+
+message Article {
+    string id = 1;
+    string content = 2;
+    int64 id = 3;
+    ArticleStatus status = 4;
+    string title = 5;
+}
+
+service garuda{
+  rpc DeleteLogEntry(ID) returns (Void);
+  rpc UpdateLogEntry(LogEntry) returns (Void);
+  rpc ReadLogEntry(ID) returns (LogEntry);
+  rpc CreateLogEntry(LogEntry) returns (LogEntry);
+  rpc ReadLogEntrysFilter(Tracker) returns (stream LogEntry);
+
+  rpc DeletePermission(ID) returns (Void);
+  rpc UpdatePermission(Permission) returns (Void);
+  rpc ReadPermission(ID) returns (Permission);
+  rpc CreatePermission(Permission) returns (Permission);
+  rpc ReadPermissionsFilter(Tracker) returns (stream Permission);
+
+  rpc DeleteGroup(ID) returns (Void);
+  rpc UpdateGroup(Group) returns (Void);
+  rpc ReadGroup(ID) returns (Group);
+  rpc CreateGroup(Group) returns (Group);
+  rpc ReadGroupsFilter(Tracker) returns (stream Group);
+
+  rpc DeleteUser(ID) returns (Void);
+  rpc UpdateUser(User) returns (Void);
+  rpc ReadUser(ID) returns (User);
+  rpc CreateUser(User) returns (User);
+  rpc ReadUsersFilter(Tracker) returns (stream User);
+
+  rpc DeleteContentType(ID) returns (Void);
+  rpc UpdateContentType(ContentType) returns (Void);
+  rpc ReadContentType(ID) returns (ContentType);
+  rpc CreateContentType(ContentType) returns (ContentType);
+  rpc ReadContentTypesFilter(Tracker) returns (stream ContentType);
+
+  rpc DeleteSession(ID) returns (Void);
+  rpc UpdateSession(Session) returns (Void);
+  rpc ReadSession(ID) returns (Session);
+  rpc CreateSession(Session) returns (Session);
+  rpc ReadSessionsFilter(Tracker) returns (stream Session);
+
+  rpc DeleteArticle(ID) returns (Void);
+  rpc UpdateArticle(Article) returns (Void);
+  rpc ReadArticle(ID) returns (Article);
+  rpc CreateArticle(Article) returns (Article);
+  rpc ReadArticlesFilter(Tracker) returns (stream Article);
+}

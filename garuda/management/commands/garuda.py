@@ -1,141 +1,44 @@
+import os
+import re
 from ast import parse
 from inspect import getsource
+from importlib import import_module
 
 from inflect import engine
 from orm_choices.core import user_attributes
 
-from django.core.management.base import BaseCommand
 from django.apps import apps
+from django.conf import settings
+from django.core.management.base import BaseCommand
+
+from garuda.constants import GARUDA_SUFFIX, GARUDA_FIELDS, GARUDA_AST_MAP, \
+    GARUDA_IGNORE_FIELDS, GARUDA_CRUD_CONTENT, GARUDA_DBAPI_CONTENT, \
+    GARUDA_RPC_CONTENT, GARUDA_REMOVE_FIELDS, GARUDA_DIR, \
+    GARUDA_PROTO_HEADER, GARUDA_PROTO_FOOTER
 
 plural = engine().plural
+CHOICES = import_module(settings.GARUDA_CHOICES)
 
-GARUDA_SUFFIX = 'Garuda'
-
-# Dict to translate Django fields into Protobuf fields
-FIELDS_DICT = dict(
-    CharField='string',
-    DateTimeField='string',
-    BooleanField='bool',
-    EmailField='string',
-    UUIDField='string',
-    ManyToManyField='repeated string',
-    TextField='string',
-    PositiveSmallIntegerField='int32',
-    IntegerField='int64',
-    ForeignKey='string',
-)
-
-# `KW_INFO` basically says how to extract data from a given ast `Assign` object
-KW_INFO = dict(
-    Num=lambda kw: kw.value.n,
-    Str=lambda kw: kw.value.s,
-    Name=lambda kw: kw.value.id,
-    NameConstant=lambda kw: kw.value.value,
-    Attribute=lambda kw: '%s.%s' % (kw.value.value.id, kw.value.attr),
-)
-
-# Fields to ifnore while dictifying
-IGNORE_FIELDS = ['created_on', 'updated_on', 'id']
-
-CRUD_CONTENT = '''
-from vandal.%(app_name)s.models import %(model_name)s  # NOQA
-IGNORE_FIELDS = %(ignore_fields)s  # NOQA
-def read_%(model_name_lower)s(*args, **kwargs):
-    try:
-        return %(model_name)s.objects.get(*args, **kwargs)
-    except %(model_name)s.DoesNotExist:
-        return None
-def read_%(model_name_lower_plural)s_filter(*args, **kwargs):
-    return %(model_name)s.objects.filter(*args, **kwargs)
-def create_%(model_name_lower)s(*args, **kwargs):
-    for ignore_field in IGNORE_FIELDS:
-        if ignore_field in kwargs:
-            del kwargs[ignore_field]
-    for key in list(kwargs):
-        if kwargs[key] in [None, 'None', '']:
-            del kwargs[key]
-    return %(model_name)s.objects.create(*args, **kwargs)
-def update_%(model_name_lower)s(id, *args, **kwargs):
-    for ignore_field in IGNORE_FIELDS:
-        if ignore_field in kwargs:
-            del kwargs[ignore_field]
-    for key in list(kwargs):
-        if kwargs[key] in [None, 'None', '']:
-            del kwargs[key]
-    return %(model_name)s.objects.filter(id=id).update(*args, **kwargs)
-def delete_%(model_name_lower)s(id):
-    return %(model_name)s.objects.get(id=id).delete()
-'''
-
-RPC_CONTENT = '''
-from vandal.proto.vandal_pb2 import %(model_name)s, Void  # NOQA
-from vandal.%(app_name)s.auto_crud import (  # NOQA
-    read_%(model_name_lower)s,
-    delete_%(model_name_lower)s,
-    create_%(model_name_lower)s,
-    update_%(model_name_lower)s,
-    read_%(model_name_lower_plural)s_filter,
-)
-def %(model_name_lower)s_to_dict(obj):
-    # Cycle through fields directly
-    d = {  }
-    if obj is None:
-        return d
-    is_dj_obj = obj.__module__.endswith('models')
-    foriegn_keys = %(foriegn_keys)s
-    for field in %(fields)s:  # NOQA
-        value = getattr(obj, field, None)
-        if field in [None, 'None']:
-            continue
-        d[field] = value
-        if is_dj_obj and (field == 'id' or field in foriegn_keys):
-            d[field] = str(value)
-        elif is_dj_obj and field in ['created_on', 'updated_on']:
-            d[field] = value.isoformat()
-    return d
-class %(rpc_name)s:
-    def Read%(model_name_plural)sFilter(self, void, context):
-        objs = read_%(model_name_lower_plural)s_filter()
-        return [%(model_name)s(
-            **%(model_name_lower)s_to_dict(obj)) for obj in objs]
-    def Read%(model_name)s(self, id, context):
-        obj = read_%(model_name_lower)s(id=id.id)
-        return %(model_name)s(**%(model_name_lower)s_to_dict(obj))
-    def Create%(model_name)s(self, obj, context):
-        obj = create_%(model_name_lower)s(**%(model_name_lower)s_to_dict(obj))
-        return %(model_name)s(**%(model_name_lower)s_to_dict(obj))
-    def Update%(model_name)s(self, obj, context):
-        obj_dict = %(model_name_lower)s_to_dict(obj)
-        del obj_dict['id']
-        obj = update_%(model_name_lower)s(obj.id, **obj_dict)
-        return Void()
-    def Delete%(model_name)s(self, id, context):
-        delete_%(model_name_lower)s(id.id)
-        return Void()
-'''
-
-GARUDA_RPC_CONTENT = '''
-  rpc Delete%(model_name)s(ID) returns (Void);
-  rpc Update%(model_name)s(%(model_name)s) returns (Void);
-  rpc Read%(model_name)s(ID) returns (%(model_name)s);
-  rpc Create%(model_name)s(%(model_name)s) returns (%(model_name)s);
-  rpc Read%(model_name_plural)sFilter(Tracker) returns (stream %(model_name)s);
-'''
+if not os.path.exists(GARUDA_DIR):
+    os.makedirs(GARUDA_DIR)
 
 
 def extract(ast, attrib):
     d = {}
     if ast.__class__.__name__ != "Assign":
         return d
-    __import__('ipdb').set_trace()
+    if ast.value.__class__.__name__ == "List":
+        # FIXME: Need to handle this the proper way.
+        # Not sure what to do with this one yet.
+        return d
     for kw in ast.value.keywords:
         if kw.arg != attrib:
             continue
         # If we ever encounter a new Type, uncomment the lines below to debug
-        # if kw.value.__class__.__name__ == 'Name':
-        #     __import__('pdb').set_trace()
+        if kw.value.__class__.__name__ == 'List':
+            __import__('pdb').set_trace()
         klass = kw.value.__class__.__name__
-        d[ast.targets[0].id] = KW_INFO[klass](kw)
+        d[ast.targets[0].id] = GARUDA_AST_MAP[klass](kw)
     return d
 
 
@@ -143,7 +46,6 @@ def process(model, attrib):
     d = {}
     ast = parse(getsource(model))
     ast = ast.body[0]
-    print(getsource(model))
     for sub_ast in ast.body:
         d.update(extract(sub_ast, attrib))
     return d
@@ -163,7 +65,7 @@ def hacky_m2one_name(field):
     '''
     This is a Hacky, Hacky method to get name.
     field.related_model.__class__.__name__ somehow returns `BaseModel`
-    which is not somethig\ng we want
+    which is not somethig we want
     '''
     return str(field.related_model).split(".")[-1].split("'")[0]
 
@@ -211,7 +113,7 @@ def get_rpc_type(field, fields, choices, many_fields):
     if field in choices:
         return choices[field].split(".")[0]
     dj_field_type = fields[field]
-    return FIELDS_DICT[dj_field_type]
+    return GARUDA_FIELDS[dj_field_type]
 
 
 def generate_model(model_name, model):
@@ -223,9 +125,9 @@ def generate_model(model_name, model):
     field_names = list(fields.keys()) + list(many_fields.keys())
 
     # remove id which is already in declaration
-    for field in ['id', 'deleted']:
-        # and we do not need these fields as well
-        field_names.remove(field)
+    # for field in ['id']:
+    #     # and we do not need these fields as well
+    #     field_names.remove(field)
     for idx, field in enumerate(sorted(field_names)):
         field_type = get_rpc_type(field, fields, choices, many_fields)
         fields_declaration += f'\n    {field_type} {field} = {idx + 2};'
@@ -256,7 +158,8 @@ def generate_choices_proto():
             continue
         choices_declaration = f'\n    {choices.__name__}UNKNOWN = 0;'
         attrs = user_attributes(choices.Meta)
-        attrs.remove('UNKNOWN')
+        if 'UNKNOWN' in attrs:
+            attrs.remove('UNKNOWN')
         c_dict = {}
         for attr in attrs:
             value = getattr(choices.Meta, attr)[0]
@@ -269,27 +172,33 @@ def generate_choices_proto():
     return choices_proto
 
 
+def sluggify(app):
+    return re.sub('[^0-9a-zA-Z]+', '_', app)
+
 def write_to_file(app, kind, content, extention='py'):
+    app = sluggify(app)
     comment_prefix = '//'
     if extention in ['py']:
         comment_prefix = '#'
-    with open(f"vandal/{app}/auto_{kind}.{extention}", "w") as f:
-        print(f'writing to {f.name}...')
+    with open(f"{GARUDA_DIR}/{app}_{kind}.{extention}", "w") as f:
+        print(f'writing to {f.name} ...')
         f.write(f'{comment_prefix} DO NOT EDIT THIS FILE MANUALLY\n')
         f.write(f'{comment_prefix} THIS FILE IS AUTO-GENERATED\n')
         f.write(f'{comment_prefix} MANUAL CHANGES WILL BE DISCARDED\n')
+        f.write(f'{comment_prefix} PLEASE READ GARUDA DOCS\n')
         f.write(content.strip())
 
 
 def codify_model(app_name, model_name, model_defnition):
     fields = sorted(model_defnition['fields'].keys())
     foriegn_keys = sorted(model_defnition['foriegn_keys'])
-    fields.remove('deleted')  # Not requred
+    for field in GARUDA_REMOVE_FIELDS:
+        fields.remove(field)
     ctx = dict(
         app_name=app_name, fields=fields, foriegn_keys=foriegn_keys,
-        ignore_fields=IGNORE_FIELDS)
+        ignore_fields=GARUDA_IGNORE_FIELDS)
     ctx.update(model_defnition['inflections'])
-    return CRUD_CONTENT % ctx, RPC_CONTENT % ctx
+    return GARUDA_CRUD_CONTENT % ctx, GARUDA_DBAPI_CONTENT % ctx
 
 
 def codify_app(app, models):
@@ -308,13 +217,19 @@ def generate_rpc_code(app_models):
         codify_app(app, app_models[app])
 
 
-def generate_vandal_rpc(app_models):
+def generate_garuda_rpc(app_models):
     content = ''
     for app in app_models:
         models = app_models[app]
         for model in models:
             content += GARUDA_RPC_CONTENT % models[model]['inflections']
-        v = __import__(f'vandal.{app}.rpc')
+        try:
+            v = __import__(f'{app}.rpc')
+        except ImportError:
+            print(f'No Custom RPC declaration in {app}')
+            # print('ERROR: PLEASE RUN THIS COMMAND AGAIN ... ')
+            # print('PROBABLY BECAUSE A NEW MODEL HAS BEEN ADDED !!!')
+            continue
         rpc_module = getattr(v, app).rpc
         rpc_class_names = list(
             filter(lambda x: x.endswith('RPC'), dir(rpc_module)))
@@ -325,7 +240,7 @@ def generate_vandal_rpc(app_models):
     return content
 
 
-def generate_auto_vandal(app_models):
+def generate_auto_garuda(app_models):
     content = ''
     models = []
     for app in app_models:
@@ -334,10 +249,11 @@ def generate_auto_vandal(app_models):
             for model in app_models[app].keys()]
         models += _models
         _models = ", ".join(_models)
-        content += f'\nfrom vandal.{app}.auto_rpc import {_models}  # NOQA'
+        app = sluggify(app)
+        content += f'\nfrom {GARUDA_DIR}.{app} import {_models}  # NOQA'
     models = ", ".join(models)
-    content += f'\n\nclass AutoVandal({models}):  # NOQA\n    pass'
-    with open("vandal/rpc/management/commands/auto_vandal.py", "w") as f:
+    content += f'\n\nclass AutoGaruda({models}):  # NOQA\n    pass'
+    with open(f"{GARUDA_DIR}/garuda_server.py", "w") as f:
         print(f'writing to {f.name}')
         f.write(content)
 
@@ -348,24 +264,16 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         app_models = process_apps()
         generate_rpc_code(app_models)
-        generate_auto_vandal(app_models)
+        generate_auto_garuda(app_models)
         CHOICES_PROTO = generate_choices_proto()
         MODELS_PROTO = generate_model_proto(app_models)
-        PROTO_HEADER = open('vandal/proto/messages.proto', 'r').read()
-        PROTO_FOOTER = open('vandal/proto/services.proto', 'r').read()
-
-        try:
-            GARUDA_RPC = "service Vandal{%s}" % generate_vandal_rpc(app_models)
-        except ImportError:
-            GARUDA_RPC = ''
-            print('ERROR: PLEASE RUN THIS COMMAND AGAIN... ')
-            print('BECAUSE A NEW MODEL HAS BEEN ADDED!!!')
-        with open('vandal/proto/vandal.proto', 'w') as f:
-            print(f'writing to {f.name}...')
+        GARUDA_RPC = "service garuda{%s}" % generate_garuda_rpc(app_models)
+        with open(f'{GARUDA_DIR}/garuda.proto', 'w') as f:
+            print(f'writing to {f.name} ...')
             f.write(f'''
-{PROTO_HEADER}
+{GARUDA_PROTO_HEADER}
 {CHOICES_PROTO}
 {MODELS_PROTO}
 {GARUDA_RPC}
-{PROTO_FOOTER}
+{GARUDA_PROTO_FOOTER}
                     '''.strip())
