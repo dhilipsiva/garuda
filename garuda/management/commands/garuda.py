@@ -1,10 +1,13 @@
 import os
 import re
 from ast import parse
+from pathlib import Path
 from inspect import getsource
 from importlib import import_module
+from pkg_resources import resource_filename
 
 from inflect import engine
+from grpc_tools import protoc
 from orm_choices.core import user_attributes
 
 from django.apps import apps
@@ -13,14 +16,20 @@ from django.core.management.base import BaseCommand
 
 from garuda.constants import GARUDA_SUFFIX, GARUDA_FIELDS, GARUDA_AST_MAP, \
     GARUDA_IGNORE_FIELDS, GARUDA_RPC_METHODS, GARUDA_CRUD_TEMPLATE, \
-    GARUDA_RPC_CONTENT, GARUDA_REMOVE_FIELDS, GARUDA_DIR, \
-    GARUDA_PROTO_HEADER, GARUDA_PROTO_FOOTER
+    GARUDA_RPC_CONTENT, GARUDA_REMOVE_FIELDS, GARUDA_DIR, GARUDA_GRPC_PATH, \
+    GARUDA_PROTO_HEADER, GARUDA_PROTO_FOOTER, GARUDA_PROTO_PATH
 
 plural = engine().plural
 CHOICES = import_module(settings.GARUDA_CHOICES)
 
-if not os.path.exists(GARUDA_DIR):
-    os.makedirs(GARUDA_DIR)
+
+def ensure_data():
+    '''
+    Ensure that the Garuda directory and files
+    '''
+    if not os.path.exists(GARUDA_DIR):
+        os.makedirs(GARUDA_DIR)
+    Path(f'{GARUDA_DIR}/__init__.py').touch()
 
 
 def extract(ast, attrib):
@@ -258,17 +267,42 @@ def generate_auto_garuda(app_models):
         f.write(content)
 
 
+def protoc_arguments():
+    '''
+    Construct protobuf compiler arguments
+    '''
+    proto_include = resource_filename('grpc_tools', '_proto')
+    return [
+        protoc.__file__, '-I', GARUDA_DIR, f'--python_out={GARUDA_DIR}',
+        f'--grpc_python_out={GARUDA_DIR}', GARUDA_PROTO_PATH,
+        f'-I{proto_include}']
+
+
+def fix_grpc_import():
+    '''
+    Snippet to fix the gRPC import path
+    '''
+    with open(GARUDA_GRPC_PATH, 'r') as f:
+        filedata = f.read()
+    filedata = filedata.replace(
+        'import garuda_pb2 as garuda__pb2',
+        f'import {GARUDA_DIR}.garuda_pb2 as garuda__pb2')
+    with open(GARUDA_GRPC_PATH, 'w') as f:
+        f.write(filedata)
+
+
 class Command(BaseCommand):
     help = 'Generate proto files'
 
     def handle(self, *args, **options):
+        ensure_data()
         app_models = process_apps()
         generate_rpc_code(app_models)
         generate_auto_garuda(app_models)
         CHOICES_PROTO = generate_choices_proto()
         MODELS_PROTO = generate_model_proto(app_models)
         GARUDA_RPC = "service Garuda{%s}" % generate_garuda_rpc(app_models)
-        with open(f'{GARUDA_DIR}/garuda.proto', 'w') as f:
+        with open(f'{GARUDA_PROTO_PATH}', 'w') as f:
             print(f'writing to {f.name} ...')
             f.write(f'''
 {GARUDA_PROTO_HEADER}
@@ -277,3 +311,5 @@ class Command(BaseCommand):
 {GARUDA_RPC}
 {GARUDA_PROTO_FOOTER}
                     '''.strip())
+        protoc.main(protoc_arguments())
+        fix_grpc_import()

@@ -8,7 +8,12 @@ def default(var_name, value):
 
 
 GARUDA_DIR = default('GARUDA_DIR', 'garuda_dir')
+GARUDA_PORT = default('GARUDA_PORT', '50051')
 GARUDA_SUFFIX = default('GARUDA_SUFFIX', 'Garuda')
+GARUDA_PROTO_FILE = default('GARUDA_PROTO_FILE', 'garuda.proto')
+GARUDA_GRPC_FILE = GARUDA_PROTO_FILE.replace('.proto', '_pb2_grpc.py')
+GARUDA_PROTO_PATH = f'{GARUDA_DIR}/{GARUDA_PROTO_FILE}'
+GARUDA_GRPC_PATH = f'{GARUDA_DIR}/{GARUDA_GRPC_FILE}'
 
 # Fields to ifnore while dictifying
 GARUDA_IGNORE_FIELDS = default(
