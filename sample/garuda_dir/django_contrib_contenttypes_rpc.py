@@ -3,7 +3,7 @@
 # MANUAL CHANGES WILL BE DISCARDED
 # PLEASE READ GARUDA DOCS
 from garuda_dir.garuda_pb2 import ContentType, Void  # NOQA
-from django.contrib.contenttypes.auto_crud import (  # NOQA
+from garuda_dir.django_contrib_contenttypes_crud import (  # NOQA
     read_contenttype,
     delete_contenttype,
     create_contenttype,

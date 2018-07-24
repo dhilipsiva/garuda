@@ -17,7 +17,8 @@ from django.core.management.base import BaseCommand
 from garuda.constants import GARUDA_SUFFIX, GARUDA_FIELDS, GARUDA_AST_MAP, \
     GARUDA_IGNORE_FIELDS, GARUDA_RPC_METHODS, GARUDA_CRUD_TEMPLATE, \
     GARUDA_RPC_CONTENT, GARUDA_REMOVE_FIELDS, GARUDA_DIR, GARUDA_GRPC_PATH, \
-    GARUDA_PROTO_HEADER, GARUDA_PROTO_FOOTER, GARUDA_PROTO_PATH
+    GARUDA_PROTO_HEADER, GARUDA_PROTO_FOOTER, GARUDA_PROTO_PATH, \
+    GARUDA_AUTO_FILE
 
 plural = engine().plural
 CHOICES = import_module(settings.GARUDA_CHOICES)
@@ -112,7 +113,9 @@ def process_app(app):
 def process_apps():
     app_models = {}
     for app in apps.get_app_configs():
-        app_models[app.name] = process_app(app)
+        models = process_app(app)
+        if len(models.keys()) != 0:
+            app_models[app.name] = models
     return app_models
 
 
@@ -204,8 +207,8 @@ def codify_model(app, model_name, model_defnition):
     for field in GARUDA_REMOVE_FIELDS:
         fields.remove(field)
     ctx = dict(
-        app=app, fields=fields, foriegn_keys=foriegn_keys,
-        ignore_fields=GARUDA_IGNORE_FIELDS, GARUDA_DIR=GARUDA_DIR)
+        app=app, app_slug=sluggify(app), fields=fields, GARUDA_DIR=GARUDA_DIR,
+        foriegn_keys=foriegn_keys, ignore_fields=GARUDA_IGNORE_FIELDS)
     ctx.update(model_defnition['inflections'])
     return GARUDA_CRUD_TEMPLATE % ctx, GARUDA_RPC_METHODS % ctx
 
@@ -259,10 +262,10 @@ def generate_auto_garuda(app_models):
         models += _models
         _models = ", ".join(_models)
         app = sluggify(app)
-        content += f'\nfrom {GARUDA_DIR}.{app} import {_models}  # NOQA'
+        content += f'\nfrom {GARUDA_DIR}.{app}_rpc import {_models}  # NOQA'
     models = ", ".join(models)
     content += f'\n\nclass AutoGaruda({models}):  # NOQA\n    pass'
-    with open(f"{GARUDA_DIR}/garuda_server.py", "w") as f:
+    with open(GARUDA_AUTO_FILE, "w") as f:
         print(f'writing to {f.name}')
         f.write(content)
 

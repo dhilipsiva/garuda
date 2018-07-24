@@ -3,7 +3,7 @@
 # MANUAL CHANGES WILL BE DISCARDED
 # PLEASE READ GARUDA DOCS
 from garuda_dir.garuda_pb2 import Permission, Void  # NOQA
-from django.contrib.auth.auto_crud import (  # NOQA
+from garuda_dir.django_contrib_auth_crud import (  # NOQA
     read_permission,
     delete_permission,
     create_permission,
@@ -57,7 +57,7 @@ class PermissionGaruda:
         return Void()
 
 from garuda_dir.garuda_pb2 import Group, Void  # NOQA
-from django.contrib.auth.auto_crud import (  # NOQA
+from garuda_dir.django_contrib_auth_crud import (  # NOQA
     read_group,
     delete_group,
     create_group,
@@ -111,7 +111,7 @@ class GroupGaruda:
         return Void()
 
 from garuda_dir.garuda_pb2 import User, Void  # NOQA
-from django.contrib.auth.auto_crud import (  # NOQA
+from garuda_dir.django_contrib_auth_crud import (  # NOQA
     read_user,
     delete_user,
     create_user,

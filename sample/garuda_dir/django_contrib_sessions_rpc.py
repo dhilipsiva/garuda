@@ -3,7 +3,7 @@
 # MANUAL CHANGES WILL BE DISCARDED
 # PLEASE READ GARUDA DOCS
 from garuda_dir.garuda_pb2 import Session, Void  # NOQA
-from django.contrib.sessions.auto_crud import (  # NOQA
+from garuda_dir.django_contrib_sessions_crud import (  # NOQA
     read_session,
     delete_session,
     create_session,

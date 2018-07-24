@@ -3,7 +3,7 @@
 # MANUAL CHANGES WILL BE DISCARDED
 # PLEASE READ GARUDA DOCS
 from garuda_dir.garuda_pb2 import Article, Void  # NOQA
-from sample.core.auto_crud import (  # NOQA
+from garuda_dir.sample_core_crud import (  # NOQA
     read_article,
     delete_article,
     create_article,

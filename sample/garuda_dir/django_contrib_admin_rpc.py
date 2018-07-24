@@ -3,7 +3,7 @@
 # MANUAL CHANGES WILL BE DISCARDED
 # PLEASE READ GARUDA DOCS
 from garuda_dir.garuda_pb2 import LogEntry, Void  # NOQA
-from django.contrib.admin.auto_crud import (  # NOQA
+from garuda_dir.django_contrib_admin_crud import (  # NOQA
     read_logentry,
     delete_logentry,
     create_logentry,

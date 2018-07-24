@@ -4,11 +4,16 @@ from concurrent import futures
 from importlib import import_module
 
 from django.core.management.base import BaseCommand
-from garuda.constants import GARUDA_DIR, GARUDA_PORT
+from garuda.constants import GARUDA_DIR, GARUDA_PORT, GARUDA_AUTO_MODULE
 
 _ONE_DAY_IN_SECONDS = 60 * 60 * 24
 
+auto_garuda = import_module(GARUDA_AUTO_MODULE)
 garuda_grpc = import_module(f'{GARUDA_DIR}.garuda_pb2_grpc')
+
+
+class Servicer(garuda_grpc.GarudaServicer, auto_garuda.AutoGaruda):
+    pass
 
 
 class Command(BaseCommand):
@@ -16,8 +21,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-        servicer = garuda_grpc.GarudaServicer()
-        garuda_grpc.add_GarudaServicer_to_server(servicer, server)
+        garuda_grpc.add_GarudaServicer_to_server(Servicer(), server)
         server.add_insecure_port(f'[::]:{GARUDA_PORT}')
         server.start()
         print(f'server started on port {GARUDA_PORT} ...')
