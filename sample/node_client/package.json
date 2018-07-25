@@ -1,0 +1,30 @@
+{
+  "name": "node_client",
+  "version": "1.0.0",
+  "description": "Sample Garuda Node Client",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dhilipsiva/garuda.git"
+  },
+  "keywords": [
+    "garuda",
+    "grpc",
+    "django",
+    "orm"
+  ],
+  "author": "dhilipsiva",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/dhilipsiva/garuda/issues"
+  },
+  "homepage": "https://github.com/dhilipsiva/garuda#readme",
+  "dependencies": {
+    "google-protobuf": "^3.6.0",
+    "grpc": "^1.13.1",
+    "grpc-tools": "^1.6.6"
+  }
+}

@@ -12,7 +12,7 @@ auto_garuda = import_module(GARUDA_AUTO_MODULE)
 garuda_grpc = import_module(f'{GARUDA_DIR}.garuda_pb2_grpc')
 
 
-class Servicer(garuda_grpc.GarudaServicer, auto_garuda.AutoGaruda):
+class Servicer(auto_garuda.AutoGaruda, garuda_grpc.GarudaServicer):
     pass
 
 
