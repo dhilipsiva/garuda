@@ -490,6 +490,17 @@ var GarudaService = exports.GarudaService = {
     responseSerialize: serialize_garuda_Article,
     responseDeserialize: deserialize_garuda_Article,
   },
+  customCallDemo: {
+    path: '/garuda.Garuda/CustomCallDemo',
+    requestStream: false,
+    responseStream: false,
+    requestType: garuda_pb.Void,
+    responseType: garuda_pb.Void,
+    requestSerialize: serialize_garuda_Void,
+    requestDeserialize: deserialize_garuda_Void,
+    responseSerialize: serialize_garuda_Void,
+    responseDeserialize: deserialize_garuda_Void,
+  },
 };
 
 exports.GarudaClient = grpc.makeGenericClientConstructor(GarudaService);

@@ -18,7 +18,7 @@ from garuda.constants import GARUDA_SUFFIX, GARUDA_FIELDS, GARUDA_AST_MAP, \
     GARUDA_IGNORE_FIELDS, GARUDA_RPC_METHODS, GARUDA_CRUD_TEMPLATE, \
     GARUDA_RPC_CONTENT, GARUDA_REMOVE_FIELDS, GARUDA_DIR, GARUDA_GRPC_PATH, \
     GARUDA_PROTO_HEADER, GARUDA_PROTO_FOOTER, GARUDA_PROTO_PATH, \
-    GARUDA_AUTO_FILE
+    GARUDA_AUTO_FILE, GARUDA_CUSTOM
 
 plural = engine().plural
 CHOICES = import_module(settings.GARUDA_CHOICES)
@@ -235,20 +235,17 @@ def generate_garuda_rpc(app_models):
         models = app_models[app]
         for model in models:
             content += GARUDA_RPC_CONTENT % models[model]['inflections']
-        try:
-            v = __import__(f'{app}.rpc')
-        except ImportError:
-            print(f'No Custom RPC declaration in {app}')
-            # print('ERROR: PLEASE RUN THIS COMMAND AGAIN ... ')
-            # print('PROBABLY BECAUSE A NEW MODEL HAS BEEN ADDED !!!')
-            continue
-        rpc_module = getattr(v, app).rpc
-        rpc_class_names = list(
-            filter(lambda x: x.endswith('RPC'), dir(rpc_module)))
-        for rpc_class_name in rpc_class_names:
-            rpc_class = getattr(rpc_module, rpc_class_name)
-            for attribute in user_attributes(rpc_class):
-                content += '  %s\n' % getattr(rpc_class, attribute).__doc__
+    try:
+        garuda_custom = import_module(GARUDA_CUSTOM)
+    except ImportError:
+        print(f'No Custom RPC declaration in {app}')
+        return content
+    if not hasattr(garuda_custom, 'GarudaCustom'):
+        print(f'GarudaCustom class not found in {GARUDA_CUSTOM} package')
+        return content
+    for attribute in user_attributes(garuda_custom.GarudaCustom):
+        content += '  %s\n' % getattr(
+            garuda_custom.GarudaCustom, attribute).__doc__
     return content
 
 

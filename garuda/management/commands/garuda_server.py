@@ -4,15 +4,24 @@ from concurrent import futures
 from importlib import import_module
 
 from django.core.management.base import BaseCommand
-from garuda.constants import GARUDA_DIR, GARUDA_PORT, GARUDA_AUTO_MODULE
+from garuda.constants import GARUDA_DIR, GARUDA_PORT, GARUDA_AUTO_MODULE, \
+    GARUDA_CUSTOM
 
 _ONE_DAY_IN_SECONDS = 60 * 60 * 24
 
 auto_garuda = import_module(GARUDA_AUTO_MODULE)
 garuda_grpc = import_module(f'{GARUDA_DIR}.garuda_pb2_grpc')
 
+try:
+    garuda_custom = import_module(GARUDA_CUSTOM)
+    GarudaCustom = garuda_custom.GarudaCustom
+except ImportError:
+    class GarudaCustom:
+        pass
 
-class Servicer(auto_garuda.AutoGaruda, garuda_grpc.GarudaServicer):
+
+class Servicer(
+        GarudaCustom, auto_garuda.AutoGaruda, garuda_grpc.GarudaServicer):
     pass
 
 

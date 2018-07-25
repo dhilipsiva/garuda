@@ -12,6 +12,11 @@ function main() {
     console.log(err)
     console.log('Article ID:', article.getId());
   });
+  var _void = new messages.Void()
+  client.customCallDemo(_void, function(err, _void) {
+    console.log(err)
+    console.log('void:', _void);
+  })
 }
 
 main();

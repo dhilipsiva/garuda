@@ -10,6 +10,7 @@ def default(var_name, value):
 GARUDA_DIR = default('GARUDA_DIR', 'garuda_dir')
 GARUDA_PORT = default('GARUDA_PORT', '50051')
 GARUDA_SUFFIX = default('GARUDA_SUFFIX', 'Garuda')
+GARUDA_CUSTOM = default('GARUDA_CUSTOM', 'garuda_custom')
 GARUDA_AUTO_PACKAGE = default('GARUDA_AUTO_PACKAGE', 'auto_garuda')
 GARUDA_PROTO_FILE = default('GARUDA_PROTO_FILE', 'garuda.proto')
 

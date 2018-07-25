@@ -189,6 +189,11 @@ class GarudaStub(object):
         request_serializer=garuda__pb2.Void.SerializeToString,
         response_deserializer=garuda__pb2.Article.FromString,
         )
+    self.CustomCallDemo = channel.unary_unary(
+        '/garuda.Garuda/CustomCallDemo',
+        request_serializer=garuda__pb2.Void.SerializeToString,
+        response_deserializer=garuda__pb2.Void.FromString,
+        )
 
 
 class GarudaServicer(object):
@@ -440,6 +445,13 @@ class GarudaServicer(object):
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
+  def CustomCallDemo(self, request, context):
+    # missing associated documentation comment in .proto file
+    pass
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
 
 def add_GarudaServicer_to_server(servicer, server):
   rpc_method_handlers = {
@@ -617,6 +629,11 @@ def add_GarudaServicer_to_server(servicer, server):
           servicer.ReadArticlesFilter,
           request_deserializer=garuda__pb2.Void.FromString,
           response_serializer=garuda__pb2.Article.SerializeToString,
+      ),
+      'CustomCallDemo': grpc.unary_unary_rpc_method_handler(
+          servicer.CustomCallDemo,
+          request_deserializer=garuda__pb2.Void.FromString,
+          response_serializer=garuda__pb2.Void.SerializeToString,
       ),
   }
   generic_handler = grpc.method_handlers_generic_handler(
