@@ -15,6 +15,7 @@ grpcio-tools = "*"
 neovim = "*"
 django-extensions = "*"
 ipdb = "*"
+twine = "*"
 
 [requires]
 python_version = "3.7"
