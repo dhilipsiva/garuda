@@ -83,7 +83,7 @@ def read_%(model_name_lower)s(*args, **kwargs):
     except %(model_name)s.DoesNotExist:
         return None
 
-
+true
 def read_%(model_name_lower_plural)s_filter(*args, **kwargs):
     return %(model_name)s.objects.filter(*args, **kwargs)
 

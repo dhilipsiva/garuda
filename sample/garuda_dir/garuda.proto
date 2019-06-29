@@ -131,7 +131,4 @@ service Garuda{
   rpc ReadArticle(ID) returns (Article);
   rpc CreateArticle(Article) returns (Article);
   rpc ReadArticlesFilter(Void) returns (stream Article);
-  
-        rpc CustomCallDemo(Void) returns (Void);
-        
 }
