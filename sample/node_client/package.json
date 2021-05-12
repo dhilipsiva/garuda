@@ -24,7 +24,7 @@
   "homepage": "https://github.com/dhilipsiva/garuda#readme",
   "dependencies": {
     "google-protobuf": "^3.6.0",
-    "grpc": "^1.13.1",
+    "grpc": "^1.24.9",
     "grpc-tools": "^1.6.6"
   }
 }
