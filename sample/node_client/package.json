@@ -25,6 +25,6 @@
   "dependencies": {
     "google-protobuf": "^3.6.0",
     "grpc": "^1.13.1",
-    "grpc-tools": "^1.6.6"
+    "grpc-tools": "^1.12.4"
   }
 }
